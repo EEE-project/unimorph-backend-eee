@@ -185,3 +185,20 @@ def test_noun_no_gender():
 def test_unsupported_pos_raises():
     with pytest.raises(PosNotSupportedError):
         ud_to_unimorph_tag({"Case": "Nom"}, "article")
+
+
+# ---------------------------------------------------------------------------
+# Latin-specific: Ablative case
+# ---------------------------------------------------------------------------
+
+def test_noun_abl_sing():
+    tags = ud_to_unimorph_tag({"Case": "Abl", "Number": "Sing"}, "noun")
+    assert len(tags) == 1
+    t = tokens(tags[0])
+    assert "N" in t and "ABL" in t and "SG" in t
+
+def test_adjective_abl_pl_neut():
+    tags = ud_to_unimorph_tag({"Case": "Abl", "Number": "Plur", "Gender": "Neut"}, "adjective")
+    assert len(tags) == 1
+    t = tokens(tags[0])
+    assert "ADJ" in t and "ABL" in t and "PL" in t and "NEUT" in t
