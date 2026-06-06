@@ -4,21 +4,33 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unimorph-backend-eee"
-version = "0.1.0"
+version = "0.4.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "eee-project @ git+https://codeberg.org/EEE-project/eee-project.git",
+    "tomlkit",
+]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
 ]
 
-[project.entry-points."eee.backends.v1"]
-el = "unimorph_backend_eee:UniMorphBackend"
-grc = "unimorph_backend_eee:UniMorphBackend"
+[project.entry-points."eee_project.backends.v1"]
+la = "unimorph_backend_eee:UniMorphBackend"
+ru = "unimorph_backend_eee:UniMorphBackend"
+es = "unimorph_backend_eee:UniMorphBackend"
+tr = "unimorph_backend_eee:UniMorphBackend"
+
+[project.entry-points."eee_project.named_backends.v1"]
+unimorph = "unimorph_backend_eee:UniMorphBackend"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/unimorph_backend_eee"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+

@@ -6,6 +6,7 @@ from unimorph_backend_eee._exceptions import (
     PosNotSupportedError,
     UnsupportedLanguageError,
 )
+from unimorph_backend_eee.profiles import _build_tags, _fallback_lookups
 from unimorph_backend_eee.tags import (
     CASE_MAP,
     DEGREE_MAP,
@@ -26,6 +27,10 @@ _INDEX_CACHE: dict[str, dict[tuple[str, str], set[str]]] = {}
 _SUPPORTED_POS: dict[str, list[str]] = {
     "ell": ["verb", "noun", "adjective"],
     "grc": ["noun", "adjective"],  # no verb data in grc.tsv
+    "lat": ["noun", "adjective"],  # lat.tsv filtered to N+ADJ; verb tags have different structure
+    "rus": ["noun", "adjective"],  # rus.tsv filtered to N+ADJ; verb past is gender-based, not person-based
+    "spa": ["noun", "adjective"],  # spa.tsv filtered to N+ADJ; Spanish has no noun/adj case
+    "tur": ["noun"],               # tur.tsv filtered to N; adj entries are LGSPEC1 predicative forms
 }
 
 
@@ -64,6 +69,7 @@ def _load_index(language: str) -> dict[tuple[str, str], set[str]]:
 
 def _lookup(lemma: str, tag: str, language: str) -> set[str]:
     return _load_index(language).get((lemma, tag), set())
+
 
 
 def ud_to_unimorph_tag(features: dict, pos: str) -> list[str]:
@@ -165,12 +171,19 @@ class UniMorphBackend:
     def __init__(self, language: str = "") -> None:
         self._language = language
 
-    def inflect(self, lemma: str, features: dict, pos: str, **_kw) -> set[str]:
+    def inflect(self, lemma: str, features: dict | str, pos: str, **_kw) -> set[str]:
         language = self._language or _kw.get("language", "")
         if not language or language not in LANGUAGE_CODE_MAP:
             raise UnsupportedLanguageError(language or "<no language>")
 
         unimorph_code = LANGUAGE_CODE_MAP[language]
+
+        if isinstance(features, str):
+            # Direct tag lookup: skip POS gating and _build_tags. Callers using str
+            # features are responsible for providing a valid UniMorph tag. Languages
+            # with no data for a given POS (e.g. grc verbs) silently return set().
+            result = _lookup(lemma, features, unimorph_code)
+            return {f for f in result if f and f not in {"UNK", "—"}}
 
         # grc/verb is not supported by UniMorph
         if unimorph_code == "grc" and pos == "verb":
@@ -178,30 +191,19 @@ class UniMorphBackend:
                 "UniMorphBackend called for grc/verb — unimorph_inflect does not "
                 "support Ancient Greek verbs; use AncientGreekBackend instead"
             )
-            raise PosNotSupportedError(f"{language}/{pos}")
+            raise PosNotSupportedError(pos)
 
         allowed_pos = _SUPPORTED_POS.get(unimorph_code, [])
         if allowed_pos and pos not in allowed_pos:
-            raise PosNotSupportedError(f"{language}/{pos}")
+            raise PosNotSupportedError(pos)
 
-        # grc.tsv gender conventions:
-        # - nouns: N;CASE;NUM (gender never present)
-        # - adjectives: ADJ;CASE;NUM;GENDER for three-termination;
-        #               both ADJ;CASE;NUM;GENDER and ADJ;CASE;NUM for two-termination
-        if unimorph_code == "grc" and pos == "noun":
-            features = {k: v for k, v in features.items() if k != "Gender"}
+        tags = _build_tags(unimorph_code, pos, features)
 
-        tags = ud_to_unimorph_tag(features, pos)
         results: set[str] = set()
         for tag in tags:
             results |= _lookup(lemma, tag, unimorph_code)
 
-        # grc two-termination adjectives index Masc/Fem without a gender tag;
-        # Neut has its own NEUT-tagged entries and must not use the bare fallback.
-        if unimorph_code == "grc" and pos == "adjective" and features.get("Gender") in ("Masc", "Fem"):
-            features_ng = {k: v for k, v in features.items() if k != "Gender"}
-            for tag in ud_to_unimorph_tag(features_ng, pos):
-                results |= _lookup(lemma, tag, unimorph_code)
+        results |= _fallback_lookups(unimorph_code, pos, lemma, tags, features, _lookup)
 
         return {f for f in results if f and f not in {"UNK", "—"}}
 
@@ -221,6 +223,22 @@ class UniMorphBackend:
         if unimorph_code == "ell" and pos == "verb":
             lemmas = {l for l in lemmas if l.endswith(("ω", "ώ", "μαι"))}
         return sorted(lemmas)
+
+    def get_slot_templates(
+        self, pos: str, terms_lang: str = "en"
+    ) -> list | None:
+        """Load slot templates for (pos, terms_lang) from TOML cache file.
+
+        Uses self._language (IETF or ISO 639-3); LANGUAGE_CODE_MAP normalises to
+        ISO 639-3. Returns None if no file exists or the pos section is absent.
+
+        The import is deferred to first call to avoid the circular-import deadlock
+        that would otherwise occur: fetch.py imports from backend.py at module level,
+        so a module-level import here would trigger that cycle during initialisation.
+        """
+        from unimorph_backend_eee.fetch import load_slot_template
+        iso_code = LANGUAGE_CODE_MAP.get(self._language, self._language)
+        return load_slot_template(pos, terms_lang, iso_code)
 
     def supported_languages(self) -> list[str]:
         return list(_SUPPORTED_POS.keys())

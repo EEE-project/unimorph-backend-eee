@@ -1,0 +1,59 @@
+version = 1
+
+[profiles.standard_nominal]
+# ell/grc: POS;CASE;NUM[;GENDER][;DEGREE]
+slots = ["pos", "case", "number", "?gender", "?degree"]
+
+[profiles.latin_nominal]
+# lat adj: POS;CASE;[GENDER;]NUM[;DEGREE] — gender before number
+slots = ["pos", "case", "?gender", "number", "?degree"]
+
+[profiles.slavic_nominal]
+# rus: POS;[ANIM|INAN;]CASE;[GENDER;]NUM — animacy_acc flag inserts ANIM/INAN before case
+# slot for ACC; Loc→ESS via case_overrides; gender only for SG via ?gender_if_singular
+slots = ["pos", "case", "?gender_if_singular", "number"]
+
+[profiles.slavic_nominal.case_overrides]
+Loc = "ESS"
+
+[profiles.slavic_nominal.flags]
+animacy_acc = true
+
+[profiles.caseless_nominal]
+# spa: POS;[GENDER;]NUM — no case dimension
+slots = ["pos", "?gender", "number"]
+
+[profiles.caseless_nominal.flags]
+masc_fem_combined_fallback = true
+
+# ── Language assignments ──────────────────────────────────────────────────────
+
+[languages.ell.pos]
+noun = "standard_nominal"
+adjective = "standard_nominal"
+
+[languages.grc.pos]
+noun = "standard_nominal"
+adjective = "standard_nominal"
+
+[languages.grc.flags]
+noun_strip_gender = true
+adjective_drop_gender_fallback = true
+
+[languages.lat.pos]
+noun = "standard_nominal"
+adjective = "latin_nominal"
+
+[languages.lat.flags]
+adjective_masc_fem_combined_fallback = true
+
+[languages.rus.pos]
+noun = "slavic_nominal"
+adjective = "slavic_nominal"
+
+[languages.spa.pos]
+noun = "caseless_nominal"
+adjective = "caseless_nominal"
+
+[languages.tur.pos]
+noun = "standard_nominal"

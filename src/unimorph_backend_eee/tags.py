@@ -21,7 +21,8 @@ TENSE_ASPECT_MAP = {
 
 PERSON_MAP = {"1": "1", "2": "2", "3": "3"}
 NUMBER_MAP = {"Sing": "SG", "Plur": "PL"}
-CASE_MAP   = {"Nom": "NOM", "Gen": "GEN", "Dat": "DAT", "Acc": "ACC", "Voc": "VOC"}
+CASE_MAP   = {"Nom": "NOM", "Gen": "GEN", "Dat": "DAT", "Acc": "ACC", "Voc": "VOC", "Abl": "ABL",
+              "Ins": "INS", "Loc": "LOC"}
 GENDER_MAP = {"Masc": "MASC", "Fem": "FEM", "Neut": "NEUT"}
 # UD Degree → UniMorph tag; Pos is the unmarked default (no tag appended).
 DEGREE_MAP = {"Pos": None, "Cmp": "CMPR", "Sup": "SPRL"}
@@ -33,4 +34,12 @@ LANGUAGE_CODE_MAP = {
     "el":  "ell",
     "ell": "ell",
     "grc": "grc",
+    "la":  "lat",
+    "lat": "lat",
+    "ru":  "rus",
+    "rus": "rus",
+    "es":  "spa",
+    "spa": "spa",
+    "tr":  "tur",
+    "tur": "tur",
 }

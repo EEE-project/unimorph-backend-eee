@@ -4,6 +4,20 @@ from unimorph_backend_eee._exceptions import (
     PosNotSupportedError,
     UnsupportedLanguageError,
 )
+from unimorph_backend_eee.profiles import (
+    load_profiles,
+    register_tag_hook,
+    detect_profile,
+)
+
+from unimorph_backend_eee.fetch import (
+    fetch_language_list,
+    fetch_tsv,
+    register_language,
+    list_cached_terms,
+    CACHE_DIR,
+    ISO639_FALLBACK,
+)
 
 __all__ = [
     "UniMorphBackend",
@@ -11,4 +25,13 @@ __all__ = [
     "FeatureNotSupportedError",
     "PosNotSupportedError",
     "UnsupportedLanguageError",
+    "load_profiles",
+    "register_tag_hook",
+    "detect_profile",
+    "fetch_language_list",
+    "fetch_tsv",
+    "register_language",
+    "list_cached_terms",
+    "CACHE_DIR",
+    "ISO639_FALLBACK",
 ]
