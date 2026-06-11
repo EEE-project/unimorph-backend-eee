@@ -1,3 +1,4 @@
+import csv
 import importlib.resources
 import logging
 
@@ -20,6 +21,8 @@ from unimorph_backend_eee.tags import (
 logger = logging.getLogger(__name__)
 
 _POS_TOKEN = {"verb": "V", "noun": "N", "adjective": "ADJ"}
+
+_POS_TSV = {"noun": "noun-tags.tsv", "adjective": "adj-tags.tsv"}
 
 _INDEX_CACHE: dict[str, dict[tuple[str, str], set[str]]] = {}
 
@@ -224,20 +227,29 @@ class UniMorphBackend:
             lemmas = {l for l in lemmas if l.endswith(("ω", "ώ", "μαι"))}
         return sorted(lemmas)
 
-    def get_slot_templates(
-        self, pos: str, terms_lang: str = "en"
-    ) -> list | None:
-        """Load slot templates for (pos, terms_lang) from TOML cache file.
+    def get_tags(self, pos: str) -> list[dict[str, str]]:
+        filename = _POS_TSV.get(pos)
+        if filename is None:
+            return []
+        data_pkg = importlib.resources.files("unimorph_backend_eee.data")
+        text = (data_pkg / filename).read_text(encoding="utf-8")
+        reader = csv.DictReader(text.splitlines(), delimiter="\t")
+        return [{k: v for k, v in row.items() if v} for row in reader]
 
-        Uses self._language (IETF or ISO 639-3); LANGUAGE_CODE_MAP normalises to
-        ISO 639-3. Returns None if no file exists or the pos section is absent.
+    def get_slot_templates(
+        self, lang: str, pos: str, terms_lang: str = "en"
+    ) -> list | None:
+        """Load slot templates for (lang, pos, terms_lang) from TOML cache file.
+
+        lang is the IETF or ISO 639-3 language code; LANGUAGE_CODE_MAP normalises
+        it to ISO 639-3. Returns None if no file exists or the pos section is absent.
 
         The import is deferred to first call to avoid the circular-import deadlock
         that would otherwise occur: fetch.py imports from backend.py at module level,
         so a module-level import here would trigger that cycle during initialisation.
         """
         from unimorph_backend_eee.fetch import load_slot_template
-        iso_code = LANGUAGE_CODE_MAP.get(self._language, self._language)
+        iso_code = LANGUAGE_CODE_MAP.get(lang, lang)
         return load_slot_template(pos, terms_lang, iso_code)
 
     def supported_languages(self) -> list[str]:

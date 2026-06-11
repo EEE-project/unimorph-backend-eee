@@ -1,0 +1,41 @@
+tag	Case	Number	Gender
+ADJ;NOM;SG	Nom	Sing
+ADJ;NOM;PL	Nom	Plur
+ADJ;GEN;SG	Gen	Sing
+ADJ;GEN;PL	Gen	Plur
+ADJ;DAT;SG	Dat	Sing
+ADJ;DAT;PL	Dat	Plur
+ADJ;ACC;SG	Acc	Sing
+ADJ;ACC;PL	Acc	Plur
+ADJ;VOC;SG	Voc	Sing
+ADJ;VOC;PL	Voc	Plur
+ADJ;NOM;SG;MASC	Nom	Sing	Masc
+ADJ;NOM;PL;MASC	Nom	Plur	Masc
+ADJ;GEN;SG;MASC	Gen	Sing	Masc
+ADJ;GEN;PL;MASC	Gen	Plur	Masc
+ADJ;DAT;SG;MASC	Dat	Sing	Masc
+ADJ;DAT;PL;MASC	Dat	Plur	Masc
+ADJ;ACC;SG;MASC	Acc	Sing	Masc
+ADJ;ACC;PL;MASC	Acc	Plur	Masc
+ADJ;VOC;SG;MASC	Voc	Sing	Masc
+ADJ;VOC;PL;MASC	Voc	Plur	Masc
+ADJ;NOM;SG;FEM	Nom	Sing	Fem
+ADJ;NOM;PL;FEM	Nom	Plur	Fem
+ADJ;GEN;SG;FEM	Gen	Sing	Fem
+ADJ;GEN;PL;FEM	Gen	Plur	Fem
+ADJ;DAT;SG;FEM	Dat	Sing	Fem
+ADJ;DAT;PL;FEM	Dat	Plur	Fem
+ADJ;ACC;SG;FEM	Acc	Sing	Fem
+ADJ;ACC;PL;FEM	Acc	Plur	Fem
+ADJ;VOC;SG;FEM	Voc	Sing	Fem
+ADJ;VOC;PL;FEM	Voc	Plur	Fem
+ADJ;NOM;SG;NEUT	Nom	Sing	Neut
+ADJ;NOM;PL;NEUT	Nom	Plur	Neut
+ADJ;GEN;SG;NEUT	Gen	Sing	Neut
+ADJ;GEN;PL;NEUT	Gen	Plur	Neut
+ADJ;DAT;SG;NEUT	Dat	Sing	Neut
+ADJ;DAT;PL;NEUT	Dat	Plur	Neut
+ADJ;ACC;SG;NEUT	Acc	Sing	Neut
+ADJ;ACC;PL;NEUT	Acc	Plur	Neut
+ADJ;VOC;SG;NEUT	Voc	Sing	Neut
+ADJ;VOC;PL;NEUT	Voc	Plur	Neut

@@ -7,13 +7,13 @@ name = "unimorph-backend-eee"
 version = "0.4.0"
 requires-python = ">=3.12"
 dependencies = [
-    "eee-project @ git+https://codeberg.org/EEE-project/eee-project.git",
     "tomlkit",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest",
+    "eee-project @ git+https://codeberg.org/EEE-project/eee-project.git",
 ]
 
 [project.entry-points."eee_project.backends.v1"]

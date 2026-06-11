@@ -103,30 +103,13 @@ wheels = [
 ]
 
 [[package]]
-name = "eee"
+name = "eee-project"
 version = "0.5.0"
-source = { editable = "../eee" }
+source = { git = "https://codeberg.org/EEE-project/eee-project.git#af2728c04ea640f78cb285baba0a2fb29b8fa3a0" }
 dependencies = [
     { name = "marimo" },
     { name = "pyyaml" },
     { name = "tomlkit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "marimo", specifier = ">=0.23.8" },
-    { name = "pyyaml", specifier = ">=6" },
-    { name = "tomlkit", specifier = ">=0.15.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "ancient-greek-backend-eee", directory = "../ancient-greek-backend-eee" },
-    { name = "marimo", specifier = ">=0.19.4" },
-    { name = "modern-greek-backend-eee", directory = "../modern-greek-backend-eee" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-cov" },
-    { name = "unimorph-backend-eee", directory = "." },
 ]
 
 [[package]]
@@ -567,22 +550,23 @@ name = "unimorph-backend-eee"
 version = "0.4.0"
 source = { editable = "." }
 dependencies = [
-    { name = "eee" },
     { name = "tomlkit" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
+    { name = "eee-project" },
     { name = "pytest" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "eee", editable = "../eee" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "tomlkit" },
+requires-dist = [{ name = "tomlkit" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "eee-project", git = "https://codeberg.org/EEE-project/eee-project.git" },
+    { name = "pytest" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "uvicorn"

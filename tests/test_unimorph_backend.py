@@ -292,3 +292,114 @@ def test_tur_language_code_tur_also_works(backend):
 
 def test_supported_languages_contains_tur(backend):
     assert "tur" in backend.supported_languages()
+
+
+# ---------------------------------------------------------------------------
+# get_tags
+# ---------------------------------------------------------------------------
+
+def test_get_tags_noun_row_count(backend):
+    assert len(backend.get_tags("noun")) == 10
+
+
+def test_get_tags_adj_row_count(backend):
+    assert len(backend.get_tags("adjective")) == 40
+
+
+def test_get_tags_verb_returns_empty(backend):
+    assert backend.get_tags("verb") == []
+
+
+def test_get_tags_unknown_pos_returns_empty(backend):
+    assert backend.get_tags("particle") == []
+
+
+def test_get_tags_noun_no_gender_field(backend):
+    for t in backend.get_tags("noun"):
+        assert "Gender" not in t
+
+
+def test_get_tags_noun_first_row(backend):
+    tags = backend.get_tags("noun")
+    assert tags[0] == {"tag": "N;NOM;SG", "Case": "Nom", "Number": "Sing"}
+
+
+def test_get_tags_noun_last_row(backend):
+    tags = backend.get_tags("noun")
+    assert tags[-1] == {"tag": "N;VOC;PL", "Case": "Voc", "Number": "Plur"}
+
+
+def test_get_tags_adj_first_10_no_gender(backend):
+    tags = backend.get_tags("adjective")
+    for t in tags[:10]:
+        assert "Gender" not in t
+
+
+def test_get_tags_adj_rows_10_to_19_masc(backend):
+    tags = backend.get_tags("adjective")
+    for t in tags[10:20]:
+        assert t.get("Gender") == "Masc"
+
+
+def test_get_tags_adj_rows_20_to_29_fem(backend):
+    tags = backend.get_tags("adjective")
+    for t in tags[20:30]:
+        assert t.get("Gender") == "Fem"
+
+
+def test_get_tags_adj_rows_30_to_39_neut(backend):
+    tags = backend.get_tags("adjective")
+    for t in tags[30:40]:
+        assert t.get("Gender") == "Neut"
+
+
+def test_get_tags_noun_roundtrip_grc_boethos(backend):
+    """βοηθός nom sg using features from get_tags() returns forms."""
+    nom_sg = next(t for t in backend.get_tags("noun") if t["Case"] == "Nom" and t["Number"] == "Sing")
+    feats = {k: v for k, v in nom_sg.items() if k != "tag"}
+    result = backend.inflect("βοηθός", feats, "noun", language="grc")
+    assert result
+
+
+def test_get_tags_adj_2term_no_gender_slot_populated_grc(backend):
+    """ἄγναπτος (2-term): the no-gender nom sg slot is populated."""
+    no_gender = next(
+        t for t in backend.get_tags("adjective")
+        if t["Case"] == "Nom" and t["Number"] == "Sing" and "Gender" not in t
+    )
+    feats = {k: v for k, v in no_gender.items() if k != "tag"}
+    result = backend.inflect("ἄγναπτος", feats, "adjective", language="grc")
+    assert result
+
+
+def test_get_tags_adj_2term_masc_same_as_no_gender_grc(backend):
+    """ἄγναπτος (2-term): MASC nom sg falls back to the shared M/F form (same as no-gender slot)."""
+    tags = backend.get_tags("adjective")
+    no_gender = next(t for t in tags if t["Case"] == "Nom" and t["Number"] == "Sing" and "Gender" not in t)
+    masc = next(t for t in tags if t["Case"] == "Nom" and t["Number"] == "Sing" and t.get("Gender") == "Masc")
+    feats_ng = {k: v for k, v in no_gender.items() if k != "tag"}
+    feats_m = {k: v for k, v in masc.items() if k != "tag"}
+    assert backend.inflect("ἄγναπτος", feats_ng, "adjective", language="grc") == \
+           backend.inflect("ἄγναπτος", feats_m, "adjective", language="grc")
+
+
+def test_get_tags_adj_3term_masc_slot_populated_grc(backend):
+    """λισσός (3-term): the MASC nom sg slot is populated."""
+    masc = next(
+        t for t in backend.get_tags("adjective")
+        if t["Case"] == "Nom" and t["Number"] == "Sing" and t.get("Gender") == "Masc"
+    )
+    feats = {k: v for k, v in masc.items() if k != "tag"}
+    result = backend.inflect("λισσός", feats, "adjective", language="grc")
+    assert result
+
+
+def test_get_tags_adj_3term_fem_slot_populated_grc(backend):
+    """λισσός (3-term): the FEM nom sg slot is populated."""
+    fem = next(
+        t for t in backend.get_tags("adjective")
+        if t["Case"] == "Nom" and t["Number"] == "Sing" and t.get("Gender") == "Fem"
+    )
+    feats = {k: v for k, v in fem.items() if k != "tag"}
+    result = backend.inflect("λισσός", feats, "adjective", language="grc")
+    assert result

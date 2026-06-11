@@ -11,7 +11,8 @@ Latin, Russian, Spanish, Turkish. All other
 [187 UniMorph languages](https://github.com/unimorph) are fetched from
 GitHub on first use and cached locally (`~/.cache/unimorph/`).
 
-Bundled TSVs are derived from Wiktionary. License: **CC BY-SA 3.0**.
+Bundled TSVs are from the [UniMorph](https://unimorph.github.io/) project (data derived from Wiktionary).
+License: **CC BY-SA 3.0**.
 
 
 ## Installation
@@ -93,6 +94,36 @@ Downloaded TSVs are stored in `~/.cache/unimorph/`.
   dicts; use `register_language()` + direct index lookup for them.
 
 
+## UD feature mapping — known gaps
+
+`inflect()` accepts UD FEATS dicts and translates them to UniMorph tags. The
+translation covers the dimensions that appear in the six bundled TSVs. The
+following UniMorph schema dimensions are **not yet mapped** from UD features
+and will raise `FeatureNotSupportedError` (or silently produce wrong results):
+
+| Gap | Schema dimension | Detail |
+|-----|-----------------|--------|
+| **VerbForm** | Finiteness / Part/Inf | `VerbForm=Part` and `VerbForm=Inf` raise `FeatureNotSupportedError`. UniMorph TSVs contain `V;PTCP` and `V;INF` entries but there is no UD→tag path for them. |
+| **Voice** | Voice | Silently discarded (`remaining.pop("Voice", None)`) because `ell.tsv` verb tags omit voice. Blocks Active/Passive distinction for any fetched language that encodes it. |
+| **Dual / Paucal number** | Number | `NUMBER_MAP` only covers `Sing→SG` and `Plur→PL`. Languages with `DU`, `PAUC`, or `TRI` require raw tag strings. |
+| **Definiteness** | Definiteness | Not implemented. `tur.tsv` uses `INDF`/`DEF`; ignored by the Turkish profile. |
+| **Mood beyond IMP/SBJV** | Mood | `OPT`, `COND`, etc. appear in some TSVs but are unreachable via UD dict. Use raw tag strings. |
+| **Non-`ell` verbs** | Tense/Aspect/Person | The profile system has no verb entry for any language except `ell`. Verbs in on-demand fetched languages require raw tag strings. |
+| **Animacy beyond Russian ACC** | Animacy | `HUM`/`NHUM` and non-accusative ANIM/INAN are not implemented. Only Russian masculine accusative animacy is handled. |
+
+**Workaround for all gaps:** pass a raw UniMorph tag string as `features` instead
+of a dict — this skips all UD mapping and queries the TSV index directly.
+
+```python
+backend = UniMorphBackend("jpn")
+forms = backend.inflect("歌う", "V;PRS;3;SG", "verb")  # raw tag — no UD mapping
+```
+
+See `tags.py` (`CASE_MAP`, `TENSE_ASPECT_MAP`, etc.) and `profiles.py` (`_build_tags`)
+for the current mapping implementation. The UniMorph feature schema is documented in
+Sylak-Glassman (2016) — see [References](#references).
+
+
 ## Slot templates
 
 TOML-based slot templates let you define structured inflection tables for any language
@@ -155,3 +186,10 @@ uv run pytest
 ## Status
 
 v0.4.0
+
+
+## References
+
+- Kirov, C., Cotterell, R., Sylak-Glassman, J., Walther, G., Vylomova, E., Xia, P., Faruqui, M., Mielke, S., McCarthy, A., Kübler, S., Yarowsky, D., Eisner, J., & Hulden, M. (2018). **UniMorph 2.0: Universal Morphology**. In *Proceedings of the 11th Language Resources and Evaluation Conference (LREC)*. https://arxiv.org/abs/1810.11101
+
+- Sylak-Glassman, J. (2016). **The Composition and Use of the Universal Morphological Feature Schema (UniMorph Schema)**. Technical Report. Johns Hopkins University. https://unimorph.github.io/doc/unimorph-schema.pdf

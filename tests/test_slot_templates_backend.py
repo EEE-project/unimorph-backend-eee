@@ -48,15 +48,15 @@ def test_inflect_str_features_filters_sentinels(backend):
 
 def test_get_slot_templates_returns_none_when_no_file(tmp_path, monkeypatch):
     monkeypatch.setattr("unimorph_backend_eee.fetch.CACHE_DIR", tmp_path)
-    result = UniMorphBackend("el").get_slot_templates("verb", "en")
+    result = UniMorphBackend("el").get_slot_templates("el", "verb", "en")
     assert result is None
 
 
 def test_get_slot_templates_delegates_with_iso_code():
     with patch("unimorph_backend_eee.fetch.load_slot_template", return_value=None) as mock_load:
-        UniMorphBackend("el").get_slot_templates("verb", "en")
+        UniMorphBackend("el").get_slot_templates("el", "verb", "en")
     mock_load.assert_called_once()
-    # New signature: load_slot_template(pos, terms_lang, lang) — lang is 3rd positional
+    # load_slot_template(pos, terms_lang, lang) — lang is 3rd positional
     call_args = mock_load.call_args[0]
     assert call_args[2] == "ell"
 
@@ -65,23 +65,25 @@ def test_get_slot_templates_returns_list_when_file_exists():
     from eee_project import SlotTemplate
     fake_slots = [SlotTemplate(label="Nom Sg", tag="N;NOM;SG", tag_type="unimorph")]
     with patch("unimorph_backend_eee.fetch.load_slot_template", return_value=fake_slots):
-        result = UniMorphBackend("el").get_slot_templates("noun", "en")
+        result = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
     assert result == fake_slots
 
 
 def test_get_slot_templates_passthrough_for_unknown_lang():
     with patch("unimorph_backend_eee.fetch.load_slot_template", return_value=None) as mock_load:
-        UniMorphBackend("ail").get_slot_templates("verb", "en")
+        UniMorphBackend("ail").get_slot_templates("ail", "verb", "en")
     call_args = mock_load.call_args[0]
     assert call_args[2] == "ail"
 
 
 def test_inflect_slot_full_stack_unimorph():
     import eee_project as eee
+    from unimorph_backend_eee.backend import UniMorphBackend
     from unimorph_backend_eee.fetch import register_language
     from eee_project import SlotTemplate
 
     register_language("ell")
+    eee.register_backend("el", UniMorphBackend())
     slot = SlotTemplate(label="Nom Sg", tag="N;NOM;SG", tag_type="unimorph")
     result = eee.inflect_slot("γυναίκα", slot, "noun", language="el")
     assert isinstance(result, set)

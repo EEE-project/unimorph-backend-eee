@@ -1,0 +1,11 @@
+tag	Case	Number
+N;NOM;SG	Nom	Sing
+N;NOM;PL	Nom	Plur
+N;GEN;SG	Gen	Sing
+N;GEN;PL	Gen	Plur
+N;DAT;SG	Dat	Sing
+N;DAT;PL	Dat	Plur
+N;ACC;SG	Acc	Sing
+N;ACC;PL	Acc	Plur
+N;VOC;SG	Voc	Sing
+N;VOC;PL	Voc	Plur
