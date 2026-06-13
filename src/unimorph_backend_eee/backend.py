@@ -25,6 +25,7 @@ _POS_TOKEN = {"verb": "V", "noun": "N", "adjective": "ADJ"}
 _POS_TSV = {"noun": "noun-tags.tsv", "adjective": "adj-tags.tsv"}
 
 _INDEX_CACHE: dict[str, dict[tuple[str, str], set[str]]] = {}
+_TAGS_CACHE: dict[str, list[dict[str, str]]] = {}
 
 # Supported POS per unimorph dataset code.
 _SUPPORTED_POS: dict[str, list[str]] = {
@@ -228,29 +229,35 @@ class UniMorphBackend:
         return sorted(lemmas)
 
     def get_tags(self, pos: str) -> list[dict[str, str]]:
+        if pos in _TAGS_CACHE:
+            return _TAGS_CACHE[pos]
         filename = _POS_TSV.get(pos)
         if filename is None:
             return []
         data_pkg = importlib.resources.files("unimorph_backend_eee.data")
         text = (data_pkg / filename).read_text(encoding="utf-8")
         reader = csv.DictReader(text.splitlines(), delimiter="\t")
-        return [{k: v for k, v in row.items() if v} for row in reader]
+        result = [{k: v for k, v in row.items() if v} for row in reader]
+        _TAGS_CACHE[pos] = result
+        return result
 
     def get_slot_templates(
         self, lang: str, pos: str, terms_lang: str = "en"
     ) -> list | None:
-        """Load slot templates for (lang, pos, terms_lang) from TOML cache file.
+        """Return slot templates for pos, derived from the bundled TSV tag table.
 
-        lang is the IETF or ISO 639-3 language code; LANGUAGE_CODE_MAP normalises
-        it to ISO 639-3. Returns None if no file exists or the pos section is absent.
-
-        The import is deferred to first call to avoid the circular-import deadlock
-        that would otherwise occur: fetch.py imports from backend.py at module level,
-        so a module-level import here would trigger that cycle during initialisation.
+        lang and terms_lang are accepted for API compatibility but ignored —
+        the TSV is language-independent and labels are the tag strings themselves.
         """
-        from unimorph_backend_eee.fetch import load_slot_template
-        iso_code = LANGUAGE_CODE_MAP.get(lang, lang)
-        return load_slot_template(pos, terms_lang, iso_code)
+        from eee_project._slot_template import SlotTemplate
+        tags = self.get_tags(pos)
+        if not tags:
+            return None
+        return [
+            SlotTemplate(label=r["tag"], tag_type="ud", tag=r["tag"],
+                         features={k: v for k, v in r.items() if k != "tag"})
+            for r in tags
+        ]
 
     def supported_languages(self) -> list[str]:
         return list(_SUPPORTED_POS.keys())

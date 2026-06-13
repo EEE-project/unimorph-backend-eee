@@ -9,7 +9,7 @@ defined in the [`eee`](https://codeberg.org/EEE-project/eee-project) package.
 Six languages are **bundled** (work offline): Modern Greek, Ancient Greek,
 Latin, Russian, Spanish, Turkish. All other
 [187 UniMorph languages](https://github.com/unimorph) are fetched from
-GitHub on first use and cached locally (`~/.cache/unimorph/`).
+GitHub on first use and cached locally (`~/.cache/eee/unimorph-backend-eee/`).
 
 Bundled TSVs are from the [UniMorph](https://unimorph.github.io/) project (data derived from Wiktionary).
 License: **CC BY-SA 3.0**.
@@ -60,7 +60,7 @@ forms = backend.inflect("歌う", {"Tag": "PRS;IPFV"}, "verb", language="jpn")
 ```
 
 `register_language()` is idempotent — subsequent calls return the cached index.
-Downloaded TSVs are stored in `~/.cache/unimorph/`.
+Downloaded TSVs are stored in `~/.cache/eee/unimorph-backend-eee/`.
 
 
 ## Bundled coverage
@@ -126,30 +126,32 @@ Sylak-Glassman (2016) — see [References](#references).
 
 ## Slot templates
 
-TOML-based slot templates let you define structured inflection tables for any language
-and terms language. Templates are stored in `~/.cache/unimorph/slots_{lang}_{terms_lang}.toml`.
+`get_slot_templates` returns `SlotTemplate` objects derived from the bundled TSV tag tables
+(`noun-tags.tsv`, `adj-tags.tsv`). This works offline with no TOML files or cache required.
+
+```python
+backend = UniMorphBackend("grc")
+slots = backend.get_slot_templates("grc", "noun")  # → list[SlotTemplate]
+# slot.tag e.g. "N;NOM;SG", slot.tag_type == "ud"
+```
+
+Returns `None` for POS without a bundled tag table (currently verb).
+
+For non-bundled languages or custom slot definitions, use `save_slot_template` /
+`load_slot_template` from `unimorph_backend_eee.fetch` to store TOML templates
+in `~/.cache/eee/unimorph-backend-eee/`.
 
 ```python
 from eee_project import SlotTemplate
 from unimorph_backend_eee.fetch import save_slot_template, load_slot_template
 
-# Save a template (e.g. after using the slot editor)
 slots = [
     SlotTemplate(tag_type="unimorph", label="Hab. Pres. 3sg Direct",   tag="V;HAB;PRS;3;SG;DIR"),
     SlotTemplate(tag_type="unimorph", label="Hab. Pres. 3sg Indirect",  tag="V;HAB;PRS;3;SG;IND"),
 ]
-save_slot_template("ail", "verb", "en", slots)   # → ~/.cache/unimorph/slots_ail_en.toml
-
-# Load it back
+save_slot_template("ail", "verb", "en", slots)
 slots = load_slot_template("ail", "verb", "en")  # → list[SlotTemplate] or None
-
-# Via the backend (used by unimorph_notebook.py)
-backend = UniMorphBackend("ail")
-slots = backend.get_slot_templates("ail", "verb", terms_lang="en")
 ```
-
-`unimorph_notebook.py` uses a four-step fallback chain when displaying inflection tables:
-bundled UD slots → TOML template (requested language) → TOML template (English fallback) → raw tag dump.
 
 ### Slot editor
 
@@ -185,7 +187,7 @@ uv run pytest
 
 ## Status
 
-v0.4.0
+v0.4.1
 
 
 ## References

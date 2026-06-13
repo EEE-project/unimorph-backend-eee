@@ -46,34 +46,28 @@ def test_inflect_str_features_filters_sentinels(backend):
     assert result == {"γυναίκα"}
 
 
-def test_get_slot_templates_returns_none_when_no_file(tmp_path, monkeypatch):
-    monkeypatch.setattr("unimorph_backend_eee.fetch.CACHE_DIR", tmp_path)
+def test_get_slot_templates_noun_returns_list():
+    result = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
+    assert result is not None
+    assert len(result) > 0
+
+
+def test_get_slot_templates_noun_has_nom_sg():
+    result = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
+    tags = {s.tag for s in result}
+    assert "N;NOM;SG" in tags
+    assert "N;ACC;PL" in tags
+
+
+def test_get_slot_templates_verb_returns_none():
     result = UniMorphBackend("el").get_slot_templates("el", "verb", "en")
     assert result is None
 
 
-def test_get_slot_templates_delegates_with_iso_code():
-    with patch("unimorph_backend_eee.fetch.load_slot_template", return_value=None) as mock_load:
-        UniMorphBackend("el").get_slot_templates("el", "verb", "en")
-    mock_load.assert_called_once()
-    # load_slot_template(pos, terms_lang, lang) — lang is 3rd positional
-    call_args = mock_load.call_args[0]
-    assert call_args[2] == "ell"
-
-
-def test_get_slot_templates_returns_list_when_file_exists():
-    from eee_project import SlotTemplate
-    fake_slots = [SlotTemplate(label="Nom Sg", tag="N;NOM;SG", tag_type="unimorph")]
-    with patch("unimorph_backend_eee.fetch.load_slot_template", return_value=fake_slots):
-        result = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
-    assert result == fake_slots
-
-
-def test_get_slot_templates_passthrough_for_unknown_lang():
-    with patch("unimorph_backend_eee.fetch.load_slot_template", return_value=None) as mock_load:
-        UniMorphBackend("ail").get_slot_templates("ail", "verb", "en")
-    call_args = mock_load.call_args[0]
-    assert call_args[2] == "ail"
+def test_get_slot_templates_terms_lang_ignored():
+    r_en = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
+    r_ru = UniMorphBackend("el").get_slot_templates("el", "noun", "ru")
+    assert [s.tag for s in r_en] == [s.tag for s in r_ru]
 
 
 def test_inflect_slot_full_stack_unimorph():
