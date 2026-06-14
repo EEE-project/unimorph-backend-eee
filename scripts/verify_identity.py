@@ -2,7 +2,15 @@
 """Verify that _build_tags() produces the correct tag for every unique tag in every bundled TSV.
 
 Exit 0 = zero divergences. Exit 1 = divergences found (implementation bug).
-Run after section-07-backend-wiring is complete.
+
+Usage:
+    uv run python scripts/verify_identity.py              # all bundled languages
+    uv run python scripts/verify_identity.py rus lat      # specific languages only
+
+To add a new language, you must:
+  1. Add an entry to PROFILE_MAP (maps (unimorph_code, pos_token) → profile name).
+  2. If the profile uses a tag ordering not yet in parse_features(), add a branch.
+  3. Add the language code to BUNDLED_LANGUAGES (or pass it on the command line).
 """
 import sys
 from pathlib import Path
@@ -11,20 +19,12 @@ REPO_ROOT = Path(__file__).parent.parent
 SRC_ROOT = REPO_ROOT / "src"
 sys.path.insert(0, str(SRC_ROOT))
 
-from unimorph_backend_eee.tags import CASE_MAP, DEGREE_MAP, GENDER_MAP, NUMBER_MAP
+from unimorph_backend_eee.reverse import CASE_MAP_INV, NUMBER_MAP_INV, GENDER_MAP_INV, DEGREE_MAP_INV
 from unimorph_backend_eee.profiles import _build_tags
 
-# ── Inverse maps ──────────────────────────────────────────────────────────────
-
-CASE_MAP_INV = {v: k for k, v in CASE_MAP.items()}
-CASE_MAP_INV["ESS"] = "Loc"  # Russian Loc→ESS override
-NUMBER_MAP_INV = {v: k for k, v in NUMBER_MAP.items()}
-GENDER_MAP_INV = {v: k for k, v in GENDER_MAP.items()}
-DEGREE_MAP_INV = {v: k for k, v in DEGREE_MAP.items() if v is not None}
-
-NUMBER_TOKENS = set(NUMBER_MAP.values())
-GENDER_TOKENS = set(GENDER_MAP.values())
-DEGREE_TOKENS = {v for v in DEGREE_MAP.values() if v}
+NUMBER_TOKENS = set(NUMBER_MAP_INV)
+GENDER_TOKENS = set(GENDER_MAP_INV)
+DEGREE_TOKENS = set(DEGREE_MAP_INV)
 ANIMACY_TOKENS = {"ANIM", "INAN"}
 
 DATA_DIR = SRC_ROOT / "unimorph_backend_eee" / "data"
@@ -192,11 +192,21 @@ def verify_language(unimorph_code: str) -> tuple[int, int, int]:
     return divergences, total, skipped
 
 
+BUNDLED_LANGUAGES = ("ell", "grc", "lat", "rus", "spa", "tur")
+
+
 def main() -> None:
+    langs = sys.argv[1:] if len(sys.argv) > 1 else BUNDLED_LANGUAGES
+    unknown = [l for l in langs if (DATA_DIR / f"{l}.tsv").exists() is False]
+    if unknown:
+        print(f"Error: no bundled TSV for: {', '.join(unknown)}", file=sys.stderr)
+        print(f"Available: {', '.join(BUNDLED_LANGUAGES)}", file=sys.stderr)
+        sys.exit(1)
+
     total_div = 0
     total_checked = 0
     total_skipped = 0
-    for lang in ("ell", "grc", "lat", "rus", "spa", "tur"):
+    for lang in langs:
         div, checked, skipped = verify_language(lang)
         print(f"{lang}: {div} divergences (checked {checked}, skipped {skipped})")
         total_div += div

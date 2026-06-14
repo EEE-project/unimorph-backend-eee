@@ -105,7 +105,7 @@ and will raise `FeatureNotSupportedError` (or silently produce wrong results):
 |-----|-----------------|--------|
 | **VerbForm** | Finiteness / Part/Inf | `VerbForm=Part` and `VerbForm=Inf` raise `FeatureNotSupportedError`. UniMorph TSVs contain `V;PTCP` and `V;INF` entries but there is no UD→tag path for them. |
 | **Voice** | Voice | Silently discarded (`remaining.pop("Voice", None)`) because `ell.tsv` verb tags omit voice. Blocks Active/Passive distinction for any fetched language that encodes it. |
-| **Dual / Paucal number** | Number | `NUMBER_MAP` only covers `Sing→SG` and `Plur→PL`. Languages with `DU`, `PAUC`, or `TRI` require raw tag strings. |
+| **Paucal / Trial number** | Number | `NUMBER_MAP` covers `Sing→SG`, `Plur→PL`, `Dual→DU`. Languages with `PAUC` or `TRI` require raw tag strings. |
 | **Definiteness** | Definiteness | Not implemented. `tur.tsv` uses `INDF`/`DEF`; ignored by the Turkish profile. |
 | **Mood beyond IMP/SBJV** | Mood | `OPT`, `COND`, etc. appear in some TSVs but are unreachable via UD dict. Use raw tag strings. |
 | **Non-`ell` verbs** | Tense/Aspect/Person | The profile system has no verb entry for any language except `ell`. Verbs in on-demand fetched languages require raw tag strings. |
@@ -153,28 +153,60 @@ save_slot_template("ail", "verb", "en", slots)
 slots = load_slot_template("ail", "verb", "en")  # → list[SlotTemplate] or None
 ```
 
-### Slot editor
-
-`tools/unimorph_slot_editor.py` is a Marimo notebook for linguists to build templates interactively:
-
-```bash
-uv run marimo edit tools/unimorph_slot_editor.py
-```
-
-Browse corpus tags with sample forms, assign labels (with auto-fill in 7 built-in languages
-or any cached language), and save TOML templates for any of the 187 UniMorph languages.
-Use the download section to fetch community-contributed templates by URL.
-
 
 ## Tools
 
 | Tool | Description |
 |------|-------------|
-| `tools/unimorph_slot_editor.py` | Marimo notebook: browse tags, assign labels, save TOML slot templates |
 | `scripts/browse.py` | CLI: browse any UniMorph language (pick lemma, see all forms) |
-| `scripts/verify_identity.py` | CLI: verify `_build_tags()` round-trips for all bundled TSVs |
+| `scripts/verify_identity.py` | CLI: verify `_build_tags()` round-trips for bundled TSVs |
+| `scripts/extract_tags.py` | CLI: extract unique tags from any language TSV and write a starter `*-tags.tsv` |
 
-The interactive inflection browser ([`eee/tools/unimorph_notebook.py`](https://codeberg.org/EEE-project/eee-project)) consumes templates saved by the slot editor.
+### extract_tags.py
+
+Reverse-maps UniMorph tokens to UD features, producing a TSV ready to bundle as a new
+language's tag table. Output goes to stdout; redirect to a file:
+
+```bash
+uv run python scripts/extract_tags.py la noun > noun-tags-lat.tsv
+uv run python scripts/extract_tags.py jpn verb   # fetches from GitHub
+uv run python scripts/extract_tags.py file.tsv adj
+```
+
+The resulting TSV uses the same schema as the bundled `noun-tags.tsv` / `adj-tags.tsv`
+(`tag` + UD feature columns). Edit it to prune unwanted slots, then drop it into
+`src/unimorph_backend_eee/data/` and register the POS in `_POS_TSV`.
+
+### verify_identity.py
+
+Checks that `_build_tags()` round-trips correctly for every unique N/ADJ tag in a
+bundled TSV. By default, verifies all six bundled languages; pass language codes to
+restrict the check:
+
+```bash
+uv run python scripts/verify_identity.py              # all bundled languages
+uv run python scripts/verify_identity.py rus lat      # Russian and Latin only
+```
+
+**Adding a new language:** extend `PROFILE_MAP` in `verify_identity.py` with entries for
+the new language's POS (e.g. `("tur2", "N"): "standard_nominal"`), and if the tag
+ordering differs from existing profiles, add a branch to `parse_features()`. Then pass
+the new language code on the command line to verify it.
+
+### reverse module
+
+The UniMorph→UD reverse maps and `tag_to_ud()` parser live in the installable package
+and can be imported directly by other programs:
+
+```python
+from unimorph_backend_eee.reverse import tag_to_ud, CASE_MAP_INV, NUMBER_MAP_INV
+
+feats = tag_to_ud("N;GEN;PL")          # {"Case": "Gen", "Number": "Plur"}
+feats = tag_to_ud("V;1;SG;IPFV;PRS")  # {"VerbForm": "Fin", "Person": "1", ...}
+```
+
+`tag_to_ud` handles N, ADJ, and V tags. Unknown tokens (compound gender, language
+extensions) are silently ignored. Returns `{}` for unrecognised POS.
 
 
 ## Development

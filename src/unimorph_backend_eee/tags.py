@@ -20,7 +20,7 @@ TENSE_ASPECT_MAP = {
 }
 
 PERSON_MAP = {"1": "1", "2": "2", "3": "3"}
-NUMBER_MAP = {"Sing": "SG", "Plur": "PL"}
+NUMBER_MAP = {"Sing": "SG", "Plur": "PL", "Dual": "DU"}
 CASE_MAP   = {"Nom": "NOM", "Gen": "GEN", "Dat": "DAT", "Acc": "ACC", "Voc": "VOC", "Abl": "ABL",
               "Ins": "INS", "Loc": "LOC"}
 GENDER_MAP = {"Masc": "MASC", "Fem": "FEM", "Neut": "NEUT"}
