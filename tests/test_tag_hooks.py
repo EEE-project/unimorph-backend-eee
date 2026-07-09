@@ -52,31 +52,14 @@ def test_hook_not_called_for_different_pos():
     assert result == ["ADJ;NOM;SG"]
 
 
-def test_alias_ru_and_rus_same_slot():
+@pytest.mark.parametrize("short_code,long_code", [("ru", "rus"), ("la", "lat"), ("el", "ell")])
+def test_alias_same_slot(short_code, long_code):
     first = lambda f: ["FIRST"]
     second = lambda f: ["SECOND"]
-    register_tag_hook("ru", "noun", first)
-    register_tag_hook("rus", "noun", second)
+    register_tag_hook(short_code, "noun", first)
+    register_tag_hook(long_code, "noun", second)
     # second registration should win (same slot)
-    result = _build_tags("rus", "noun", {"Case": "Nom", "Number": "Sing"})
-    assert result == ["SECOND"]
-
-
-def test_alias_la_and_lat_same_slot():
-    first = lambda f: ["FIRST"]
-    second = lambda f: ["SECOND"]
-    register_tag_hook("la", "noun", first)
-    register_tag_hook("lat", "noun", second)
-    result = _build_tags("lat", "noun", {"Case": "Nom", "Number": "Sing"})
-    assert result == ["SECOND"]
-
-
-def test_alias_el_and_ell_same_slot():
-    first = lambda f: ["FIRST"]
-    second = lambda f: ["SECOND"]
-    register_tag_hook("el", "noun", first)
-    register_tag_hook("ell", "noun", second)
-    result = _build_tags("ell", "noun", {"Case": "Nom", "Number": "Sing"})
+    result = _build_tags(long_code, "noun", {"Case": "Nom", "Number": "Sing"})
     assert result == ["SECOND"]
 
 

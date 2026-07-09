@@ -13,6 +13,7 @@ def tokens(tag):
 # ---------------------------------------------------------------------------
 
 def test_verb_pres_act_1sg():
+    """Present active 1sg decodes correctly; token order is V;PERSON;NUMBER;ASPECT;TENSE."""
     tags = ud_to_unimorph_tag(
         {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing"},
         "verb",
@@ -121,15 +122,6 @@ def test_verb_voice_ignored():
     assert "PASS" not in tags[0]
     assert "ACT" not in tags[0]
     assert "MID" not in tags[0]
-
-
-def test_tag_order_verb():
-    """Token order must be V;PERSON;NUMBER;ASPECT;TENSE"""
-    tags = ud_to_unimorph_tag(
-        {"Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing"},
-        "verb",
-    )
-    assert tags == ["V;1;SG;IPFV;PRS"]
 
 
 
