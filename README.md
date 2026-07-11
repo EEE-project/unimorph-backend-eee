@@ -80,6 +80,16 @@ Downloaded TSVs are stored in `~/.cache/eee/unimorph-backend-eee/`.
 | Spanish | `es` | `spa.tsv` | Adjective | 2,186 |
 | Turkish | `tr` | `tur.tsv` | Noun | 1,002 |
 
+**Period — `grc.tsv`:** predominantly Koine/New Testament, without period
+labelling. Wiktionary's Ancient Greek coverage is skewed toward NT and early
+Christian vocabulary (e.g. ἄγγελος, ἀγαπητός, ἁγιασμός dominate the dataset).
+Classical Attic literary words (ἄναξ, ξεῖνος, ἔπος, μῦθος, κλέος) are mostly
+absent; Homeric vocabulary is not meaningfully covered. For verbs (absent
+here entirely) and better Classical/Homeric noun coverage, use
+[ancient-greek-backend-eee](https://codeberg.org/EEE-project/ancient-greek-backend-eee).
+
+**Period — `ell.tsv`:** Contemporary Standard Modern Greek (Demotic).
+
 **Limitations**
 
 - Ancient Greek verb data is absent from `grc.tsv` — use
@@ -90,6 +100,16 @@ Downloaded TSVs are stored in `~/.cache/eee/unimorph-backend-eee/`.
   map to all UD features (conditional, pluperfect are empty).
 - The `ell.tsv` vocabulary is corpus-derived — common words such as λόγος,
   άνθρωπος may be absent.
+- `ell.tsv` imperative entries are tagged `V;2;SG;IMP` with no aspect
+  distinction — continuous and aorist imperatives return identical forms.
+- `ell.tsv` perfect cells contain the perfective-stem verbal adjective (e.g.
+  `αγαναχτήσει`), not a finite form; the same string is returned for all
+  person/number combinations.
+- The Wiktionary scrape occasionally includes alternate aorist 3pl forms in
+  `-αν` alongside the standard `-σαν`; the result set may be a superset of
+  what a dedicated rule-based backend returns for those cells.
+- Particle prefixes (θα/να) present in the raw `ell.tsv` are stripped during
+  index load; `inflect()` always returns bare forms without the prefix.
 - Non-bundled languages use raw UniMorph feature strings rather than UD feature
   dicts; use `register_language()` + direct index lookup for them.
 
@@ -219,7 +239,7 @@ uv run pytest
 
 ## Status
 
-v0.4.2
+v0.4.3
 
 
 ## References
