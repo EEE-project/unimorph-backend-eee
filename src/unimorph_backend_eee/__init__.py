@@ -4,6 +4,10 @@ from unimorph_backend_eee._exceptions import (
     PosNotSupportedError,
     UnsupportedLanguageError,
 )
+from unimorph_backend_eee.gender import (
+    gender_from_ending,
+    infer_noun_gender,
+)
 from unimorph_backend_eee.profiles import (
     load_profiles,
     register_tag_hook,
@@ -25,6 +29,8 @@ __all__ = [
     "FeatureNotSupportedError",
     "PosNotSupportedError",
     "UnsupportedLanguageError",
+    "gender_from_ending",
+    "infer_noun_gender",
     "load_profiles",
     "register_tag_hook",
     "detect_profile",

@@ -228,6 +228,24 @@ feats = tag_to_ud("V;1;SG;IPFV;PRS")  # {"VerbForm": "Fin", "Person": "1", ...}
 `tag_to_ud` handles N, ADJ, and V tags. Unknown tokens (compound gender, language
 extensions) are silently ignored. Returns `{}` for unrecognised POS.
 
+### gender module
+
+UniMorph tags never carry gender for nouns — it's a fixed lexical property, not
+inflectional. `infer_noun_gender` and `gender_from_ending` (grc + ell) fill that gap:
+
+```python
+from unimorph_backend_eee import infer_noun_gender, gender_from_ending
+
+infer_noun_gender("ναύτης", "grc")      # "Masc" — read off the TSV's own "ὁ ναύτης"
+infer_noun_gender("κύπρος", "grc")      # "Fem"  — article overrides the -ος default
+gender_from_ending("θεραπευτής", "grc")  # "Masc" — ending heuristic, no TSV entry needed
+```
+
+`infer_noun_gender` checks the bundled TSV's article first (grc only — ell's data has
+no articles), then falls back to `gender_from_ending`'s suffix heuristic. Both return
+`None` rather than guess when the ending is genuinely ambiguous (e.g. bare `-ος`, where
+the masculine default has real feminine exceptions like ὁδός, νῆσος).
+
 
 ## Development
 
@@ -239,7 +257,7 @@ uv run pytest
 
 ## Status
 
-v0.4.3
+v0.5.0
 
 
 ## References
