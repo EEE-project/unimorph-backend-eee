@@ -403,3 +403,51 @@ def test_get_tags_adj_3term_fem_slot_populated_grc(backend):
     feats = {k: v for k, v in fem.items() if k != "tag"}
     result = backend.inflect("λισσός", feats, "adjective", language="grc")
     assert result
+
+
+# --- analyze() ---
+# Needs a language bound at construction (self._language), like list_lemmas() --
+# there is no per-call language= kwarg, so the bare `backend` fixture (which
+# every inflect() test above passes language= to directly) doesn't apply here.
+
+def test_analyze_verb_ell_real_roundtrip():
+    """άγω PRS.1SG.IND generates 'άγω'; analyzing it back finds the verb reading."""
+    b = UniMorphBackend("ell")
+    assert {"lemma": "άγω", "pos": "verb", "tag": "V;1;SG;IPFV;PRS",
+            "features": {"Tense": "Pres", "Aspect": "Imp", "Mood": "Ind",
+                          "Person": "1", "Number": "Sing", "VerbForm": "Fin"}} \
+        in b.analyze("άγω")
+
+
+def test_analyze_noun_grc_real_roundtrip():
+    """βοηθός nom sg is its own bare lemma form in grc.tsv (article-stripped)."""
+    b = UniMorphBackend("grc")
+    assert {"lemma": "βοηθός", "pos": "noun", "tag": "N;NOM;SG",
+            "features": {"Case": "Nom", "Number": "Sing"}} in b.analyze("βοηθός")
+
+
+def test_analyze_cross_pos_ambiguity_ell():
+    """άβαθα is both a noun's own form (several cells share the -α ending)
+    and the neuter of the adjective άβαθος -- real ambiguity in the data,
+    not a bug; both readings must come back."""
+    b = UniMorphBackend("ell")
+    results = b.analyze("άβαθα")
+    assert any(r["lemma"] == "άβαθα" and r["pos"] == "noun" for r in results)
+    assert any(r["lemma"] == "άβαθος" and r["pos"] == "adjective" for r in results)
+
+
+def test_analyze_unknown_form_returns_empty_list():
+    assert UniMorphBackend("ell").analyze("xyzabc") == []
+
+
+def test_analyze_no_language_bound_returns_empty_list():
+    """Matches list_lemmas()'s same requirement: entry-point-instantiated
+    backends (bare UniMorphBackend(), no language) can't resolve a dataset."""
+    assert UniMorphBackend().analyze("άγω") == []
+
+
+def test_analyze_result_features_match_tag_to_ud():
+    from unimorph_backend_eee.reverse import tag_to_ud
+    b = UniMorphBackend("ell")
+    for r in b.analyze("άγω"):
+        assert r["features"] == tag_to_ud(r["tag"])

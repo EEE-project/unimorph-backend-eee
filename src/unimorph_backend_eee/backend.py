@@ -8,6 +8,7 @@ from unimorph_backend_eee._exceptions import (
     UnsupportedLanguageError,
 )
 from unimorph_backend_eee.profiles import _build_tags, _fallback_lookups
+from unimorph_backend_eee.reverse import tag_to_ud
 from unimorph_backend_eee.tags import (
     CASE_MAP,
     DEGREE_MAP,
@@ -21,10 +22,12 @@ from unimorph_backend_eee.tags import (
 logger = logging.getLogger(__name__)
 
 _POS_TOKEN = {"verb": "V", "noun": "N", "adjective": "ADJ"}
+_TAG_POS = {v: k for k, v in _POS_TOKEN.items()}
 
 _POS_TSV = {"noun": "noun-tags.tsv", "adjective": "adj-tags.tsv"}
 
 _INDEX_CACHE: dict[str, dict[tuple[str, str], set[str]]] = {}
+_REVERSE_INDEX_CACHE: dict[str, dict[str, set[tuple[str, str]]]] = {}
 _TAGS_CACHE: dict[str, list[dict[str, str]]] = {}
 
 # Supported POS per unimorph dataset code.
@@ -73,6 +76,23 @@ def _load_index(language: str) -> dict[tuple[str, str], set[str]]:
 
 def _lookup(lemma: str, tag: str, language: str) -> set[str]:
     return _load_index(language).get((lemma, tag), set())
+
+
+def _load_reverse_index(language: str) -> dict[str, set[tuple[str, str]]]:
+    """Invert _load_index(language): surface form -> {(lemma, tag), ...}.
+
+    Built from the same already-cleaned (lemma, tag) -> forms index inflect()
+    reads (particle-stripped, comma-variant-split, sentinel-filtered) --
+    reuses that cleaning rather than re-parsing the raw TSV.
+    """
+    if language in _REVERSE_INDEX_CACHE:
+        return _REVERSE_INDEX_CACHE[language]
+    reverse: dict[str, set[tuple[str, str]]] = {}
+    for (lemma, tag), forms in _load_index(language).items():
+        for form in forms:
+            reverse.setdefault(form, set()).add((lemma, tag))
+    _REVERSE_INDEX_CACHE[language] = reverse
+    return reverse
 
 
 
@@ -227,6 +247,38 @@ class UniMorphBackend:
         if unimorph_code == "ell" and pos == "verb":
             lemmas = {l for l in lemmas if l.endswith(("ω", "ώ", "μαι"))}
         return sorted(lemmas)
+
+    def analyze(self, form: str) -> list[dict]:
+        """Reverse lookup: candidate (lemma, pos, UD features) analyses for a surface form.
+
+        Inverts the same (lemma, tag) -> forms index inflect() reads (see
+        _load_reverse_index), then converts each raw UniMorph tag to UD FEATS
+        via tag_to_ud() -- a general tag-string parser that covers verb too,
+        unlike get_tags()'s TSV table (no verb-tags.tsv exists). pos is
+        derived from the tag's own leading token (N/ADJ/V); a tag with an
+        unrecognized leading token is skipped, matching tag_to_ud()'s own
+        "unrecognised POS -> {}" convention.
+
+        Returns [] if no language is bound to this instance (matches
+        list_lemmas()'s same requirement -- see its own body) or the form
+        matches nothing.
+        """
+        language = self._language
+        if not language or language not in LANGUAGE_CODE_MAP:
+            return []
+        unimorph_code = LANGUAGE_CODE_MAP[language]
+        results = []
+        for lemma, tag in _load_reverse_index(unimorph_code).get(form, ()):
+            pos = _TAG_POS.get(tag.split(";", 1)[0])
+            if pos is None:
+                continue
+            results.append({
+                "lemma": lemma,
+                "pos": pos,
+                "tag": tag,
+                "features": tag_to_ud(tag),
+            })
+        return results
 
     def get_tags(self, pos: str) -> list[dict[str, str]]:
         if pos in _TAGS_CACHE:

@@ -35,6 +35,10 @@ rus = UniMorphBackend("ru")
 
 forms = el.inflect("γυναίκα", {"Case": "Gen", "Number": "Plur"}, "noun")  # {"γυναικών"}
 forms = lat.inflect("puella", {"Case": "Gen", "Number": "Plur"}, "noun")  # {"puellarum"}
+
+el.analyze("άγω")
+# [{"lemma": "άγω", "pos": "verb", "tag": "V;1;SG;IPFV;PRS",
+#   "features": {"Tense": "Pres", "Aspect": "Imp", "Mood": "Ind", "Person": "1", "Number": "Sing", "VerbForm": "Fin"}}]
 ```
 
 Feature keys follow [Universal Dependencies FEATS](https://universaldependencies.org/u/feat/index.html).
@@ -257,7 +261,10 @@ uv run pytest
 
 ## Status
 
-v0.5.0
+v0.6.0 — added `analyze(form)`: reverse lookup from a surface form to candidate
+`{lemma, pos, tag, features}` analyses, inverting the same bundled TSV index
+`inflect()` reads. Covers verb too (via `tag_to_ud()`, a general tag-string
+parser), unlike `get_slot_templates()`'s TSV table, which has no verb-tags.tsv.
 
 
 ## References
