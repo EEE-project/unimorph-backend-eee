@@ -112,6 +112,31 @@ def test_verb_imperative_with_voice():
     assert tags == ["V;2;SG;IMP"]
 
 
+def test_verb_imperative_aspect_imp():
+    """Imperative + Aspect=Imp -> IPFV;IMP tag (aspect slot before mood, as elsewhere)."""
+    tags = ud_to_unimorph_tag(
+        {"Mood": "Imp", "Aspect": "Imp", "Person": "2", "Number": "Sing"},
+        "verb",
+    )
+    assert tags == ["V;2;SG;IPFV;IMP"]
+
+
+def test_verb_imperative_aspect_perf():
+    tags = ud_to_unimorph_tag(
+        {"Mood": "Imp", "Aspect": "Perf", "Person": "2", "Number": "Plur"},
+        "verb",
+    )
+    assert tags == ["V;2;PL;PFV;IMP"]
+
+
+def test_verb_imperative_aspect_invalid_raises():
+    with pytest.raises(FeatureNotSupportedError):
+        ud_to_unimorph_tag(
+            {"Mood": "Imp", "Aspect": "Bogus", "Person": "2", "Number": "Sing"},
+            "verb",
+        )
+
+
 def test_verb_voice_ignored():
     """Voice=Pass accepted without error and not present in output tag"""
     tags = ud_to_unimorph_tag(

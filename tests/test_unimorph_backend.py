@@ -112,6 +112,52 @@ def test_inflect_future_explicit_aspect_calls_lookup_once(backend):
 
 
 # ---------------------------------------------------------------------------
+# Imperative aspect disambiguation (real ell.tsv data — δροσίζω was resolved
+# by cross-referencing its own IPFV/PFV rows; see backend.py's Imp branch).
+# ---------------------------------------------------------------------------
+
+def test_ell_imperative_aspect_imp_disambiguates(backend):
+    """δροσίζω 2sg imperative + Aspect=Imp → only the continuous form."""
+    result = backend.inflect(
+        "δροσίζω", {"Mood": "Imp", "Aspect": "Imp", "Person": "2", "Number": "Sing"}, "verb", language="ell"
+    )
+    assert result == {"δρόσιζε"}
+
+
+def test_ell_imperative_aspect_perf_disambiguates(backend):
+    """δροσίζω 2sg imperative + Aspect=Perf → only the aorist form."""
+    result = backend.inflect(
+        "δροσίζω", {"Mood": "Imp", "Aspect": "Perf", "Person": "2", "Number": "Sing"}, "verb", language="ell"
+    )
+    assert result == {"δρόσισε"}
+
+
+def test_ell_imperative_no_aspect_still_returns_union(backend):
+    """δροσίζω 2sg imperative with no Aspect → unchanged legacy behavior (both forms)."""
+    result = backend.inflect(
+        "δροσίζω", {"Mood": "Imp", "Person": "2", "Number": "Sing"}, "verb", language="ell"
+    )
+    assert result == {"δρόσιζε", "δρόσισε"}
+
+
+def test_ell_imperative_aspect_unresolved_lemma_returns_empty(backend):
+    """συζητάω's 2sg imperative rows bundle both aspects in each comma-separated form
+    ('συζήτα, συζήταγε' / 'συζήτησε, συζήτα') and were left unresolved on purpose (see
+    patch_imp_aspect.py) — querying with Aspect must return empty rather than guessing,
+    since no V;2;SG;{aspect};IMP tag exists. The no-aspect query is untouched (still the
+    pre-existing 3-way union)."""
+    result = backend.inflect(
+        "συζητάω", {"Mood": "Imp", "Aspect": "Perf", "Person": "2", "Number": "Sing"}, "verb", language="ell"
+    )
+    assert result == set()
+
+    result = backend.inflect(
+        "συζητάω", {"Mood": "Imp", "Person": "2", "Number": "Sing"}, "verb", language="ell"
+    )
+    assert result == {"συζήτα", "συζήταγε", "συζήτησε"}
+
+
+# ---------------------------------------------------------------------------
 # Latin tests
 # ---------------------------------------------------------------------------
 

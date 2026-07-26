@@ -105,7 +105,18 @@ here entirely) and better Classical/Homeric noun coverage, use
 - The `ell.tsv` vocabulary is corpus-derived — common words such as λόγος,
   άνθρωπος may be absent.
 - `ell.tsv` imperative entries are tagged `V;2;SG;IMP` with no aspect
-  distinction — continuous and aorist imperatives return identical forms.
+  distinction by default — pass `Aspect: "Imp"`/`"Perf"` to disambiguate.
+  This only resolves where the exact surface form also appears, unambiguously,
+  among the same lemma's own already-tagged IPFV/PFV rows elsewhere (e.g.
+  imperative singular colliding with 3rd-singular past) — about 1,923 of the
+  3,748 original bare rows (~51%), covering ~1,080 of the 1,106 lemmas that
+  have imperative data at all. Forms that don't coincide with another tagged
+  cell, or where a bare row's comma-separated alternatives split across both
+  aspects, stay unresolved: querying with an explicit `Aspect` for those
+  returns an empty set rather than guessing, while the aspect-less query is
+  unchanged (still the original, undifferentiated form set). Plural
+  imperatives are the largest remaining gap, since their endings rarely
+  coincide with any other paradigm cell.
 - `ell.tsv` perfect cells contain the perfective-stem verbal adjective (e.g.
   `αγαναχτήσει`), not a finite form; the same string is returned for all
   person/number combinations.
@@ -260,6 +271,10 @@ uv run pytest
 
 
 ## Status
+
+v0.7.0 — `ell.tsv` imperative rows can now be disambiguated by `Aspect`
+(`Imp`/`Perf`) wherever the surface form unambiguously cross-references the
+same lemma's own tagged IPFV/PFV data elsewhere; see Limitations for coverage.
 
 v0.6.0 — added `analyze(form)`: reverse lookup from a surface form to candidate
 `{lemma, pos, tag, features}` analyses, inverting the same bundled TSV index

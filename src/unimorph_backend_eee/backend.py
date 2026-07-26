@@ -124,12 +124,19 @@ def ud_to_unimorph_tag(features: dict, pos: str) -> list[str]:
         number = NUMBER_MAP[number_ud]
 
         if mood_ud == "Imp":
-            remaining.pop("Tense", None)   # unimorph imperative tag carries no tense
-            remaining.pop("Aspect", None)  # or aspect info
+            remaining.pop("Tense", None)  # unimorph imperative tag carries no tense
+            aspect_ud = remaining.pop("Aspect", None)
             if remaining:
                 key, val = next(iter(remaining.items()))
                 raise FeatureNotSupportedError(key, str(val))
-            return [f"V;{person};{number};IMP"]
+            if aspect_ud is None:
+                return [f"V;{person};{number};IMP"]
+            elif aspect_ud == "Imp":
+                return [f"V;{person};{number};IPFV;IMP"]
+            elif aspect_ud == "Perf":
+                return [f"V;{person};{number};PFV;IMP"]
+            else:
+                raise FeatureNotSupportedError("Aspect", str(aspect_ud))
 
         tense_ud = remaining.pop("Tense", None)
         aspect_ud = remaining.pop("Aspect", None)
