@@ -19,6 +19,7 @@ TENSE_ASPECT_MAP = {
     ("Fut",  "Perf"): ("PFV", "FUT"),
 }
 
+ASPECT_MAP = {"Imp": "IPFV", "Perf": "PFV"}
 PERSON_MAP = {"1": "1", "2": "2", "3": "3"}
 NUMBER_MAP = {"Sing": "SG", "Plur": "PL", "Dual": "DU"}
 CASE_MAP   = {"Nom": "NOM", "Gen": "GEN", "Dat": "DAT", "Acc": "ACC", "Voc": "VOC", "Abl": "ABL",

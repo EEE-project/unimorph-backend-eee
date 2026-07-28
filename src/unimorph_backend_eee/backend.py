@@ -10,6 +10,7 @@ from unimorph_backend_eee._exceptions import (
 from unimorph_backend_eee.profiles import _build_tags, _fallback_lookups
 from unimorph_backend_eee.reverse import tag_to_ud
 from unimorph_backend_eee.tags import (
+    ASPECT_MAP,
     CASE_MAP,
     DEGREE_MAP,
     GENDER_MAP,
@@ -96,6 +97,17 @@ def _load_reverse_index(language: str) -> dict[str, set[tuple[str, str]]]:
 
 
 
+def _aspect_token(aspect_ud: "str | None") -> "str | None":
+    """UD Aspect -> UniMorph aspect token, or None if *aspect_ud* is None
+    (callers decide what "no aspect specified" means for their own mood).
+    Raises FeatureNotSupportedError for any other unrecognized value."""
+    if aspect_ud is None:
+        return None
+    if aspect_ud not in ASPECT_MAP:
+        raise FeatureNotSupportedError("Aspect", str(aspect_ud))
+    return ASPECT_MAP[aspect_ud]
+
+
 def ud_to_unimorph_tag(features: dict, pos: str) -> list[str]:
     """Translate a UD feature dict + POS to UniMorph tag(s)."""
     pos_token = _POS_TOKEN.get(pos)
@@ -129,14 +141,10 @@ def ud_to_unimorph_tag(features: dict, pos: str) -> list[str]:
             if remaining:
                 key, val = next(iter(remaining.items()))
                 raise FeatureNotSupportedError(key, str(val))
-            if aspect_ud is None:
+            aspect_tok = _aspect_token(aspect_ud)
+            if aspect_tok is None:
                 return [f"V;{person};{number};IMP"]
-            elif aspect_ud == "Imp":
-                return [f"V;{person};{number};IPFV;IMP"]
-            elif aspect_ud == "Perf":
-                return [f"V;{person};{number};PFV;IMP"]
-            else:
-                raise FeatureNotSupportedError("Aspect", str(aspect_ud))
+            return [f"V;{person};{number};{aspect_tok};IMP"]
 
         tense_ud = remaining.pop("Tense", None)
         aspect_ud = remaining.pop("Aspect", None)
@@ -148,12 +156,8 @@ def ud_to_unimorph_tag(features: dict, pos: str) -> list[str]:
         if mood_ud == "Sub":
             if aspect_ud is None:
                 return [f"V;{person};{number};IPFV;SBJV", f"V;{person};{number};PFV;SBJV"]
-            elif aspect_ud == "Imp":
-                return [f"V;{person};{number};IPFV;SBJV"]
-            elif aspect_ud == "Perf":
-                return [f"V;{person};{number};PFV;SBJV"]
-            else:
-                raise FeatureNotSupportedError("Aspect", str(aspect_ud))
+            aspect_tok = _aspect_token(aspect_ud)
+            return [f"V;{person};{number};{aspect_tok};SBJV"]
 
         ta_key = (tense_ud, aspect_ud)
         if ta_key not in TENSE_ASPECT_MAP:
