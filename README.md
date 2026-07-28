@@ -1,10 +1,17 @@
 # unimorph-backend-eee
 
 [UniMorph](https://unimorph.github.io/) TSV-lookup backend for the
-[EEE](https://codeberg.org/EEE-project/eee-project) morphology framework.
+[EEE](https://github.com/EEE-project/eee-project) morphology framework.
 
 Provides `UniMorphBackend`, satisfying the `MorphologyBackend` protocol
-defined in the [`eee`](https://codeberg.org/EEE-project/eee-project) package.
+defined in the [`eee`](https://github.com/EEE-project/eee-project) package.
+
+🔓 Open source:
+- prod — https://github.com/EEE-project/unimorph-backend-eee
+- prod mirror — https://gitlab.com/EEE-project/unimorph-backend-eee
+- dev — https://codeberg.org/EEE-project/unimorph-backend-eee
+
+💬 Community: https://telegram.me/eee_greek
 
 Six languages are **bundled** (work offline): Modern Greek, Ancient Greek,
 Latin, Russian, Spanish, Turkish. All other
@@ -268,18 +275,6 @@ the masculine default has real feminine exceptions like ὁδός, νῆσος).
 uv sync --dev
 uv run pytest
 ```
-
-
-## Status
-
-v0.7.0 — `ell.tsv` imperative rows can now be disambiguated by `Aspect`
-(`Imp`/`Perf`) wherever the surface form unambiguously cross-references the
-same lemma's own tagged IPFV/PFV data elsewhere; see Limitations for coverage.
-
-v0.6.0 — added `analyze(form)`: reverse lookup from a surface form to candidate
-`{lemma, pos, tag, features}` analyses, inverting the same bundled TSV index
-`inflect()` reads. Covers verb too (via `tag_to_ud()`, a general tag-string
-parser), unlike `get_slot_templates()`'s TSV table, which has no verb-tags.tsv.
 
 
 ## References
