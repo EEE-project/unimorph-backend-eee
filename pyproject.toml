@@ -4,7 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unimorph-backend-eee"
-version = "1.0.0"
+version = "1.0.1"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "tomlkit",
