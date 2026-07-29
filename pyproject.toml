@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unimorph-backend-eee"
-version = "1.0.2"
+version = "1.0.3"
 description = "UniMorph TSV-lookup backend for the EEE project"
 readme = "README.md"
 license = "Apache-2.0"
@@ -12,6 +12,7 @@ authors = [{name = "Oleg Sadov", email = "oleg.sadov@gmail.com"}]
 requires-python = ">=3.12"
 dependencies = [
     "tomlkit",
+    "eee-project>=1.0.0",
 ]
 
 [project.urls]
@@ -21,7 +22,6 @@ Repository = "https://github.com/EEE-project/unimorph-backend-eee"
 [dependency-groups]
 dev = [
     "pytest",
-    "eee-project @ git+https://codeberg.org/EEE-project/eee-project.git",
 ]
 
 [project.entry-points."eee_project.backends.v1"]
