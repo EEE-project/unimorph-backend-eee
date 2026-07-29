@@ -25,6 +25,11 @@ License: **CC BY-SA 3.0**.
 ## Installation
 
 ```bash
+pip install unimorph-backend-eee
+```
+
+Development version (latest, from Codeberg):
+```bash
 pip install "unimorph-backend-eee @ git+https://codeberg.org/EEE-project/unimorph-backend-eee.git"
 ```
 
