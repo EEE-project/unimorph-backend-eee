@@ -70,6 +70,26 @@ def test_get_slot_templates_terms_lang_ignored():
     assert [s.tag for s in r_en] == [s.tag for s in r_ru]
 
 
+def test_get_slot_templates_caches_result():
+    # get_tags(pos) was already cached (_TAGS_CACHE), but the SlotTemplate
+    # list built from it was rebuilt from scratch on every call -- confirm
+    # a second call now returns the identical cached list object, not just
+    # an equal-but-freshly-rebuilt one. Cache is module-level (_SLOT_CACHE),
+    # so this holds across instances too.
+    r1 = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
+    r2 = UniMorphBackend("el").get_slot_templates("el", "noun", "en")
+    assert r1 is r2
+
+
+def test_get_slot_templates_unsupported_pos_still_returns_none_on_repeat_calls():
+    # pos absent from _POS_TSV returns None before ever reaching the new
+    # _SLOT_CACHE write -- confirm repeat calls still consistently return
+    # None rather than caching some other falsy value by accident.
+    r1 = UniMorphBackend("el").get_slot_templates("el", "verb", "en")
+    r2 = UniMorphBackend("el").get_slot_templates("el", "verb", "en")
+    assert r1 is None and r2 is None
+
+
 def test_inflect_slot_full_stack_unimorph():
     import eee_project as eee
     from unimorph_backend_eee.backend import UniMorphBackend

@@ -30,6 +30,7 @@ _POS_TSV = {"noun": "noun-tags.tsv", "adjective": "adj-tags.tsv"}
 _INDEX_CACHE: dict[str, dict[tuple[str, str], set[str]]] = {}
 _REVERSE_INDEX_CACHE: dict[str, dict[str, set[tuple[str, str]]]] = {}
 _TAGS_CACHE: dict[str, list[dict[str, str]]] = {}
+_SLOT_CACHE: dict[str, list] = {}
 
 # Supported POS per unimorph dataset code.
 _SUPPORTED_POS: dict[str, list[str]] = {
@@ -311,16 +312,23 @@ class UniMorphBackend:
 
         lang and terms_lang are accepted for API compatibility but ignored —
         the TSV is language-independent and labels are the tag strings themselves.
+        Results are cached per pos (module-level, matching _TAGS_CACHE's own
+        convention) -- get_tags(pos) was already cached, but the SlotTemplate
+        list built from it was rebuilt from scratch on every call.
         """
+        if pos in _SLOT_CACHE:
+            return _SLOT_CACHE[pos]
         from eee_project._slot_template import SlotTemplate
         tags = self.get_tags(pos)
         if not tags:
             return None
-        return [
+        result = [
             SlotTemplate(label=r["tag"], tag_type="ud", tag=r["tag"],
                          features={k: v for k, v in r.items() if k != "tag"})
             for r in tags
         ]
+        _SLOT_CACHE[pos] = result
+        return result
 
     def supported_languages(self) -> list[str]:
         return list(_SUPPORTED_POS.keys())
