@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5 - 2026-10-20
+- `fetch_language_list()` no longer caches a failed fetch. A network error used to end the paging loop, and the
+  function then wrote `languages.json` anyway, with the current time and an empty list (or a partial one after a
+  failure on a later page). One offline run therefore left the language list empty for the whole 7-day cache time,
+  even when the network was back. It now returns `[]` on any network failure, as its docstring says, and writes no
+  cache file. A cached list that is empty (written by 1.0.4 and earlier) is ignored, so such a cache file heals at once.
+
 ## 1.0.4 - 2026-08-14
 - `get_slot_templates()` now caches its result per `pos` (module-level
   `_SLOT_CACHE`, matching the existing `_TAGS_CACHE` convention) --

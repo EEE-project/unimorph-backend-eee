@@ -66,7 +66,7 @@ backends ([modern-greek-backend-eee](https://codeberg.org/EEE-project/modern-gre
 ```python
 from unimorph_backend_eee import fetch_language_list, fetch_tsv, register_language
 
-# List all 187 UniMorph languages (cached 7 days)
+# List all 187 UniMorph languages (cached 7 days; a failed fetch returns [] and is not cached)
 langs = fetch_language_list()   # [{"code": "bel", "name": "Belarusian"}, ...]
 
 # Download and register any language on demand

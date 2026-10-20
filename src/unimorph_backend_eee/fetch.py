@@ -78,7 +78,8 @@ def fetch_language_list(verbose: bool = False) -> list[dict]:
     """Return [{code, name}] for all UniMorph repos, from cache or GitHub API.
 
     Result is cached in CACHE_DIR/languages.json for LANG_LIST_TTL_DAYS days.
-    Returns [] on network failure (caller may fall back to bundled list).
+    Returns [] on network failure (caller may fall back to bundled list). A failed
+    fetch is never cached, and an empty cached list is ignored.
     """
     _lang_list_cache = CACHE_DIR / "languages.json"
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,7 +88,7 @@ def fetch_language_list(verbose: bool = False) -> list[dict]:
             data = json.loads(_lang_list_cache.read_text())
             cached_at = datetime.fromisoformat(data["cached_at"])
             age = (datetime.now(timezone.utc) - cached_at).days
-            if age < LANG_LIST_TTL_DAYS:
+            if age < LANG_LIST_TTL_DAYS and data["languages"]:
                 return data["languages"]
         except (json.JSONDecodeError, KeyError, TypeError, ValueError):
             pass
@@ -105,7 +106,7 @@ def fetch_language_list(verbose: bool = False) -> list[dict]:
         except (urllib.error.URLError, OSError, json.JSONDecodeError) as e:
             if verbose:
                 print(f" failed ({e})")
-            break
+            return []
         if not repos:
             break
         for r in repos:
